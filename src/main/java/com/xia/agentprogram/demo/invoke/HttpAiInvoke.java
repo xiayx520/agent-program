@@ -6,7 +6,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 
-public class HttpInvoke {
+public class HttpAiInvoke {
 
     private static final String BASE_URL = "https://llm-jg6z5n4odgfj3iho.cn-beijing.maas.aliyuncs.com/api/v1";
     private static final String API_KEY = "sk-ws-H.YHIDMDM.xREv.MEQCIH4tombsqeuAZM9KxfT9hkUE0b78WltGyD_Q-Bw9lgTsAiBjf4U3trm8U_ujef30-Qz5OV1CyMmmVtFKhxr-CwRkFA";

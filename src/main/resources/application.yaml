@@ -1,6 +1,12 @@
 spring:
   application:
     name: agent-program
+  ai:
+    dashscope:
+      api-key: sk-ws-H.YHIDMDM.xREv.MEQCIH4tombsqeuAZM9KxfT9hkUE0b78WltGyD_Q-Bw9lgTsAiBjf4U3trm8U_ujef30-Qz5OV1CyMmmVtFKhxr-CwRkFA
+      chat:
+        options:
+          model: qwen-max
 server:
   port: 8080
   servlet:
