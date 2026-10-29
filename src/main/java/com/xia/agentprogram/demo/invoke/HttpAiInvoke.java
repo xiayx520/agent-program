@@ -8,8 +8,7 @@ import cn.hutool.json.JSONUtil;
 
 public class HttpAiInvoke {
 
-    private static final String BASE_URL = "https://llm-jg6z5n4odgfj3iho.cn-beijing.maas.aliyuncs.com/api/v1";
-    private static final String API_KEY = "sk-ws-H.YHIDMDM.xREv.MEQCIH4tombsqeuAZM9KxfT9hkUE0b78WltGyD_Q-Bw9lgTsAiBjf4U3trm8U_ujef30-Qz5OV1CyMmmVtFKhxr-CwRkFA";
+    private static final String API_KEY = TestApiKey.apiKey;
     private static final String MODEL = "qwen3.8-max";
 
     /**
@@ -20,7 +19,7 @@ public class HttpAiInvoke {
      * @return 接口响应的 JSON 字符串
      */
     public static String callWithMessage(String systemPrompt, String userPrompt) {
-        String url = BASE_URL + "/services/aigc/multimodal-generation/generation";
+        String url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
 
         // 构建 system 消息
         JSONObject systemContent = new JSONObject();

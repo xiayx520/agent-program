@@ -1,12 +1,18 @@
 spring:
   application:
     name: agent-program
+  profiles:
+    active: local
   ai:
     dashscope:
-      api-key: sk-ws-H.YHIDMDM.xREv.MEQCIH4tombsqeuAZM9KxfT9hkUE0b78WltGyD_Q-Bw9lgTsAiBjf4U3trm8U_ujef30-Qz5OV1CyMmmVtFKhxr-CwRkFA
+      api-key: ${ai.dashscope.api-key}
       chat:
         options:
-          model: qwen-max
+          model: qwen-flash
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: qwen3.5:4b
 server:
   port: 8080
   servlet:

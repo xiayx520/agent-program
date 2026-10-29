@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class SdkAiInvoke {
-    static {Constants.baseHttpApiUrl="https://llm-jg6z5n4odgfj3iho.cn-beijing.maas.aliyuncs.com/api/v1";}
+    static {Constants.baseHttpApiUrl="https://dashscope.aliyuncs.com/api/v1";}
     public static MultiModalConversationResult callWithMessage() throws ApiException, NoApiKeyException, InputRequiredException, UploadFileException {
         MultiModalConversation conv = new MultiModalConversation();
         MultiModalMessage systemMsg = MultiModalMessage.builder()
@@ -31,7 +31,7 @@ public class SdkAiInvoke {
                 .build();
         MultiModalConversationParam param = MultiModalConversationParam.builder()
                 // 若没有配置环境变量，请用百炼API Key将下行替换为：.apiKey("sk-xxx")
-                .apiKey("sk-ws-H.YHIDMDM.xREv.MEQCIH4tombsqeuAZM9KxfT9hkUE0b78WltGyD_Q-Bw9lgTsAiBjf4U3trm8U_ujef30-Qz5OV1CyMmmVtFKhxr-CwRkFA")
+                .apiKey(TestApiKey.apiKey)
                 // 此处以qwen3.8-max为例，可按需更换模型名称。模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
                 .model("qwen3.8-max")
                 .messages(Arrays.asList(systemMsg, userMsg))
