@@ -1,5 +1,7 @@
 package com.xia.agentprogram.app;
 
+import com.xia.agentprogram.advisor.MyLoggerAdvisor;
+import com.xia.agentprogram.advisor.ReReadingAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -9,6 +11,8 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @Slf4j
@@ -22,13 +26,24 @@ public class LoveApp {
             "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
 
     public LoveApp(ChatModel dashScopeChatModel) {
+        // 内存存储聊天记忆
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(new InMemoryChatMemoryRepository())
                 .maxMessages(10)
                 .build();
+        // 文件存储聊天记忆
+//        String fileDir = System.getProperty("user.dir") + "/chat-memory";
+//        ChatMemory chatMemory = new FileBasedChatMemory(fileDir);
+
         this.chatClient = ChatClient.builder(dashScopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                        // Spring Ai 日志拦截器
+//                        new SimpleLoggerAdvisor(),
+                        // 自定义的日志 Advisor
+                        new MyLoggerAdvisor(),
+                        // 重读 Advisor
+                        new ReReadingAdvisor())
                 .build();
     }
 
@@ -53,6 +68,29 @@ public class LoveApp {
         }
         log.info("response: {}", content);
         return content;
+    }
+
+
+    record LoveReport(String title, List<String> suggestions) {
+    }
+
+    /**
+     * 使用聊天模型生成回复，结构化输出，返回结果为 LoveReport 类型
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public LoveReport useChatWithReport(String message, String chatId) {
+        LoveReport loveReport = chatClient.prompt()
+                .user(message)
+                .system(SYSTEM_PROMPT + "每次对话后都要生成恋爱结果，标题为{用户名}的恋爱报告，内容为建议列表")
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .call()
+                .entity(LoveReport.class);
+
+        log.info("loveReport: {}", loveReport);
+
+        return loveReport;
     }
 
 }
