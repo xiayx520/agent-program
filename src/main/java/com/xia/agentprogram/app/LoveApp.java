@@ -1,15 +1,18 @@
 package com.xia.agentprogram.app;
 
 import com.xia.agentprogram.advisor.MyLoggerAdvisor;
-import com.xia.agentprogram.advisor.ReReadingAdvisor;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -41,9 +44,10 @@ public class LoveApp {
                         // Spring Ai 日志拦截器
 //                        new SimpleLoggerAdvisor(),
                         // 自定义的日志 Advisor
-                        new MyLoggerAdvisor(),
                         // 重读 Advisor
-                        new ReReadingAdvisor())
+//                        new ReReadingAdvisor(),
+                        // 自定义的日志 Advisor
+                        new MyLoggerAdvisor())
                 .build();
     }
 
@@ -91,6 +95,59 @@ public class LoveApp {
         log.info("loveReport: {}", loveReport);
 
         return loveReport;
+    }
+
+    @Resource
+    private VectorStore loveAppVectorStore;
+
+    /**
+     * 使用聊天模型生成回复，使用Rag知识库回答
+     * @param message
+     * @param chatId
+     * @return
+     */
+
+    public String useChatWithRag(String message, String chatId) {
+        ChatResponse response = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(QuestionAnswerAdvisor.builder(loveAppVectorStore).build())
+                .call()
+                .chatResponse();
+
+        String content = null;
+        if (response != null) {
+            content = response.getResult().getOutput().getText();
+        }
+        log.info("response: {}", content);
+        return content;
+    }
+
+    @Resource
+    private Advisor loveAppRagCloudAdvisor;
+
+
+    /**
+     * 使用聊天模型生成回复，使用Cloud Rag知识库回答
+     * @param message
+     * @param chatId
+     * @return
+     */
+
+    public String useChatWithCloudRag(String message, String chatId) {
+        ChatResponse response = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(loveAppRagCloudAdvisor)
+                .call()
+                .chatResponse();
+
+        String content = null;
+        if (response != null) {
+            content = response.getResult().getOutput().getText();
+        }
+        log.info("response: {}", content);
+        return content;
     }
 
 }
