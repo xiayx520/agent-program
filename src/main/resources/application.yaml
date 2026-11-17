@@ -9,10 +9,28 @@ spring:
       chat:
         options:
           model: qwen-flash
+      # PgVectorStore 的 vector_store 表为 vector(1536)，需让向量模型输出 1536 维
+      # （text-embedding-v3 只支持 1024/768/512，text-embedding-v4 才支持 1536）
+      embedding:
+        options:
+          model: text-embedding-v4
+          dimensions: 1536
     ollama:
       base-url: http://localhost:11434
       chat:
         model: qwen3.5:4b
+#    vectorstore:
+#      pgvector:
+#        index-type: HNSW
+#        dimensions: 1536
+#        distance-type: COSINE_DISTANCE
+#        max-document-batch-size: 10000
+  datasource:
+    url: ${datasource.url}
+    username: ${datasource.username}
+    password: ${datasource.password}
+
+
 server:
   port: 8080
   servlet:

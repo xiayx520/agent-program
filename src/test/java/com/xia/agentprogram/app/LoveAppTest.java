@@ -53,4 +53,12 @@ class LoveAppTest {
         String answer =  loveApp.useChatWithCloudRag(message, chatId);
         Assertions.assertNotNull(answer);
     }
+
+    @Test
+    void useChatWithPgVector() {
+        String chatId = UUID.randomUUID().toString();
+        String message = "我已经结婚了，但是婚后关系不太亲密，怎么办？";
+        String answer =  loveApp.useChatWithPgVector(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
 }

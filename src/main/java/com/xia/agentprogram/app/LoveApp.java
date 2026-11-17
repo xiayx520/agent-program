@@ -150,4 +150,30 @@ public class LoveApp {
         return content;
     }
 
+    @Resource
+    private VectorStore pgVectorVectorStore;
+
+    /**
+     * 使用聊天模型生成回复，使用PgVector数据库回答
+     * @param message
+     * @param chatId
+     * @return
+     */
+
+    public String useChatWithPgVector(String message, String chatId) {
+        ChatResponse response = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
+                .call()
+                .chatResponse();
+
+        String content = null;
+        if (response != null) {
+            content = response.getResult().getOutput().getText();
+        }
+        log.info("response: {}", content);
+        return content;
+    }
+
 }

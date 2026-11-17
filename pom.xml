@@ -80,6 +80,30 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Spring AI PostgreSQL 向量存储支持 因为 VectorStore 依赖 EmbeddingModel 对象，
+        咱们之前的学习中同时引入了 Ollama 和 阿里云Dashscope 的依赖，有两个 EmbeddingModel 的 Bean，Spring 不知道注入哪个-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.ai</groupId>-->
+<!--            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>-->
+<!--            <version>1.0.8</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-pgvector-store</artifactId>
+            <version>1.1.8</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- langchain4j-dashscope -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
