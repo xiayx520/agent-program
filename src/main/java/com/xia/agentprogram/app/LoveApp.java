@@ -1,6 +1,8 @@
 package com.xia.agentprogram.app;
 
 import com.xia.agentprogram.advisor.MyLoggerAdvisor;
+import com.xia.agentprogram.rag.LoveAppRagCustomAdvisorFactory;
+import com.xia.agentprogram.rag.QueryRewriter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -165,6 +167,59 @@ public class LoveApp {
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
+                .call()
+                .chatResponse();
+
+        String content = null;
+        if (response != null) {
+            content = response.getResult().getOutput().getText();
+        }
+        log.info("response: {}", content);
+        return content;
+    }
+
+
+    @Resource
+    private QueryRewriter queryRewriter;
+
+    /**
+     * 使用查询重写器
+     *
+     * @param message 用户问题
+     * @param chatId  聊天ID
+     * @return 回复内容
+     */
+    public String useChatWithRetriever(String message, String chatId) {
+        // 使用查询重写器
+        String rewriteMessage = queryRewriter.doQueryRewrite(message);
+
+        ChatResponse response = chatClient.prompt()
+                .user(rewriteMessage)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .call()
+                .chatResponse();
+
+        String content = null;
+        if (response != null) {
+            content = response.getResult().getOutput().getText();
+        }
+        log.info("response: {}", content);
+        return content;
+    }
+
+
+    /**
+     * 使用自定义的Advisor工厂,上下文查询增强器,用于根据状态过滤文档
+     *
+     * @param message 用户问题
+     * @param chatId  聊天ID
+     * @return 回复内容
+     */
+    public String useChatWithCustomAdvisorFactory(String message, String chatId) {
+        ChatResponse response = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(loveAppVectorStore, "单身"))
                 .call()
                 .chatResponse();
 

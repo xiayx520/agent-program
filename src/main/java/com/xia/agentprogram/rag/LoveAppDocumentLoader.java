@@ -32,11 +32,15 @@ public class LoveAppDocumentLoader {
             org.springframework.core.io.Resource[] resources = resourcePatternResolver.getResources("classpath:document/*.md");
 
             for (org.springframework.core.io.Resource resource : resources) {
+                String fileName = Objects.requireNonNull(resource.getFilename());
+                String status = fileName.substring(fileName.length() - 6, fileName.length() - 4);
                 MarkdownDocumentReaderConfig config = MarkdownDocumentReaderConfig.builder()
                         .withHorizontalRuleCreateDocument(true)
                         .withIncludeCodeBlock(false)
                         .withIncludeBlockquote(false)
-                        .withAdditionalMetadata("filename", Objects.requireNonNull(resource.getFilename()))
+                        .withAdditionalMetadata("filename", fileName)
+                        // 添加状态元数据
+                        .withAdditionalMetadata("status", status)
                         .build();
                 MarkdownDocumentReader reader = new MarkdownDocumentReader(resource, config);
                 documents.addAll(reader.get());
