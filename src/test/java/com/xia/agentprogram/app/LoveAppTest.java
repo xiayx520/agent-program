@@ -77,4 +77,27 @@ class LoveAppTest {
         String answer =  loveApp.useChatWithCustomAdvisorFactory(message, chatId);
         Assertions.assertNotNull(answer);
     }
+
+    @Test
+    void doChatWithTools() {
+        testMessage("最近和对象吵架了，看看百度（baidu.com）的其他情侣是怎么解决矛盾的？");//测试网页抓取
+
+        testMessage("周末想带女朋友去上海约会，推荐几个适合情侣的小众打卡地？");//测试联网搜索
+
+        testMessage("直接下载一张适合做手机壁纸的星空情侣图片为文件");//测试文件下载
+
+        testMessage("执行 Python3 脚本来生成数据分析报告");//测试终端操作
+
+        testMessage("保存我的恋爱档案为文件");//测试文件保存
+
+        testMessage("生成一份‘七夕约会计划’PDF，包含餐厅预订、活动流程和礼物清单");//测试PDF生成
+
+
+    }
+
+    private void testMessage(String message) {
+        String chatId = UUID.randomUUID().toString();
+        String answer = loveApp.doChatWithTools(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
 }
