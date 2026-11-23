@@ -104,6 +104,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Spring AI MCP Client -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+            <version>1.1.8</version>
+        </dependency>
         <!-- langchain4j-dashscope -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
