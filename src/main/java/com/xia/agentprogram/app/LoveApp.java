@@ -83,6 +83,7 @@ public class LoveApp {
 
     /**
      * 使用聊天模型生成回复，结构化输出，返回结果为 LoveReport 类型
+     *
      * @param message
      * @param chatId
      * @return
@@ -105,6 +106,7 @@ public class LoveApp {
 
     /**
      * 使用聊天模型生成回复，使用Rag知识库回答
+     *
      * @param message
      * @param chatId
      * @return
@@ -132,6 +134,7 @@ public class LoveApp {
 
     /**
      * 使用聊天模型生成回复，使用Cloud Rag知识库回答
+     *
      * @param message
      * @param chatId
      * @return
@@ -158,6 +161,7 @@ public class LoveApp {
 
     /**
      * 使用聊天模型生成回复，使用PgVector数据库回答
+     *
      * @param message
      * @param chatId
      * @return
@@ -232,6 +236,11 @@ public class LoveApp {
         return content;
     }
 
+
+    @Resource
+    private ToolCallback[] allTools;
+
+
     /**
      * 使用工具
      *
@@ -239,10 +248,6 @@ public class LoveApp {
      * @param chatId  聊天ID
      * @return 回复内容
      */
-
-    @Resource
-    private ToolCallback[] allTools;
-
     public String doChatWithTools(String message, String chatId) {
         ChatResponse response = chatClient.prompt()
                 .user(message)
@@ -259,17 +264,16 @@ public class LoveApp {
         return content;
     }
 
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
 
     /**
-         * 使用MCP服务
+     * 使用MCP服务
      *
      * @param message 用户问题
      * @param chatId  聊天ID
      * @return 回复内容
      */
-    @Resource
-    private ToolCallbackProvider toolCallbackProvider;
-
     public String doChatWithMcp(String message, String chatId) {
         ChatResponse response = chatClient.prompt()
                 .user(message)

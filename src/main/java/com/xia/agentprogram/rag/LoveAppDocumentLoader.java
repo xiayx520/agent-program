@@ -23,7 +23,7 @@ public class LoveAppDocumentLoader {
 
     /**
      * 加载Markdown文档
-     * @return
+     * @return 文档列表
      */
     public List<Document> loadMarkdowns() {
         log.info("开始加载Markdown文档");
