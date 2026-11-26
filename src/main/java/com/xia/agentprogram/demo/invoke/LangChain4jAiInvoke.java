@@ -7,7 +7,7 @@ public class LangChain4jAiInvoke {
     public static void main(String[] args) {
         QwenLanguageModel model = QwenLanguageModel.builder()
                 .apiKey(TestApiKey.apiKey)
-                .modelName("qwen-flash")
+                .modelName("qwen4-max")
                 .build();
         String answer = model.generate("你好").content();
         System.out.println(answer); // Hello World

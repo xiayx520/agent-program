@@ -9,7 +9,7 @@ import cn.hutool.json.JSONUtil;
 public class HttpAiInvoke {
 
     private static final String API_KEY = TestApiKey.apiKey;
-    private static final String MODEL = "qwen3.8-max";
+    private static final String MODEL = "qwen4-max";
 
     /**
      * 使用 Hutool 发起多模态对话请求

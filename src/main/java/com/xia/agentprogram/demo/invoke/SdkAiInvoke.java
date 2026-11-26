@@ -32,8 +32,8 @@ public class SdkAiInvoke {
         MultiModalConversationParam param = MultiModalConversationParam.builder()
                 // 若没有配置环境变量，请用百炼API Key将下行替换为：.apiKey("sk-xxx")
                 .apiKey(TestApiKey.apiKey)
-                // 此处以qwen3.8-max为例，可按需更换模型名称。模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
-                .model("qwen3.8-max")
+                // 此处以qwen4-max为例，可按需更换模型名称。模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
+                .model("qwen4-max")
                 .messages(Arrays.asList(systemMsg, userMsg))
                 .build();
         return conv.call(param);

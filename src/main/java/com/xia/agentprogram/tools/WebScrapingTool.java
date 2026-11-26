@@ -27,7 +27,7 @@ public class WebScrapingTool {
      */
     private static final int MAX_TEXT_LENGTH = 500;
 
-    @Tool(name = "Web Scraping Tool", description = "Scrape content from a web page")
+    @Tool(description = "Scrape content from a web page")
     public String scrapeWebsite(@ToolParam(description = "URL of the web page to scrape") String url) {
         try {
             Document doc = Jsoup.connect(url)

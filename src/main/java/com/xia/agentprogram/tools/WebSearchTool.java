@@ -23,7 +23,7 @@ public class WebSearchTool {
         this.apiKey = apiKey;
     }
 
-    @Tool(name = "Baidu Search Tool", description = "Search for information from Baidu Search Engine")
+    @Tool(description = "Search for information from baidu Search Engine")
     public String searchWeb(
             @ToolParam(description = "Search query keyword") String query) {
         Map<String, Object> paramMap = new HashMap<>();
