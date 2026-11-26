@@ -67,9 +67,9 @@ public class ToolCallAgent extends ReActAgent{
             this.toolCallChatResponse = chatResponse;
             //3. 解析响应内容，获取助手消息和工具调用信息
             AssistantMessage assistantMessage = Objects.requireNonNull(chatResponse).getResult().getOutput();
-            String assistantText = assistantMessage.getText();
+            setThinkResult(assistantMessage.getText());
             List<AssistantMessage.ToolCall> toolCallList = assistantMessage.getToolCalls();
-            log.info("{}的思考: {}", getName(), assistantText);
+            log.info("{}的思考: {}", getName(), getThinkResult());
             log.info("{}调用的工具数: {}", getName(), toolCallList.size());
             String toolCallInfo = toolCallList.stream()
                     .map(toolCall -> String.format("工具调用名称: %s, 工具调用参数: %s",

@@ -1,5 +1,6 @@
 package com.xia.agentprogram.controller;
 
+import com.xia.agentprogram.agent.CodeManus;
 import com.xia.agentprogram.app.LoveApp;
 import com.xia.agentprogram.result.Result;
 import jakarta.annotation.Resource;
@@ -28,6 +29,10 @@ public class AIController {
 
     @Resource
     private ChatModel dashScopeChatModel;
+
+    @Resource
+    private ChatModel ollamaChatModel;
+
 
     /**
      * 同步调用
@@ -93,6 +98,22 @@ public class AIController {
                         emitter::complete
                 );
         return emitter;
+    }
+
+    @GetMapping("/chat/manus")
+    public SseEmitter doChatWithManus(String message) {
+        SseEmitter emitter = new SseEmitter(180000L);
+        if (message == null || message.isEmpty()) {
+            try {
+                emitter.send("message or chatId is empty");
+            } catch (IOException e) {
+                emitter.completeWithError(e);
+            }
+            return emitter;
+        }
+        log.info("doChatWithManus message:{}", message);
+        CodeManus manus = new CodeManus(allTools, ollamaChatModel, dashScopeChatModel);
+        return manus.runWithSse(message);
     }
 
 }
