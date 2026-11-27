@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { createSSE } from '@/api/sse'
+import AiAvatar from '@/components/AiAvatar.vue'
 
 interface ChatMessage {
   role: 'user' | 'ai'
   content: string
+  timestamp: number
 }
 
 interface Props {
   title: string
   buildUrl: (message: string) => string
+  /** 每收到一个 SSE 块后追加的分隔符，例如 AI 超级智能体可设置为 '\n' 实现逐段换行 */
+  chunkSeparator?: string
+  /** SSE 整体超时时间，单位毫秒，默认 180000（3 分钟） */
+  timeout?: number
 }
 
 const props = defineProps<Props>()
@@ -19,7 +25,9 @@ const messages = ref<ChatMessage[]>([])
 const loading = ref(false)
 const error = ref('')
 const currentAiContent = ref('')
+const aiTimestamp = ref<number | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
+const copiedId = ref<string | null>(null)
 
 let sseController: { close: () => void } | null = null
 
@@ -32,10 +40,39 @@ const scrollToBottom = async () => {
   }
 }
 
+const formatTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const copyText = async (text: string, id: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+  }
+  copiedId.value = id
+  setTimeout(() => {
+    copiedId.value = null
+  }, 1500)
+}
+
 const finishAiMessage = () => {
   if (currentAiContent.value) {
-    messages.value.push({ role: 'ai', content: currentAiContent.value })
+    messages.value.push({
+      role: 'ai',
+      content: currentAiContent.value,
+      timestamp: aiTimestamp.value || Date.now()
+    })
     currentAiContent.value = ''
+    aiTimestamp.value = null
   }
 }
 
@@ -47,17 +84,25 @@ const sendMessage = () => {
   }
 
   error.value = ''
-  messages.value.push({ role: 'user', content: text })
+  messages.value.push({ role: 'user', content: text, timestamp: Date.now() })
   input.value = ''
   loading.value = true
   currentAiContent.value = ''
+  aiTimestamp.value = null
   scrollToBottom()
 
   const url = props.buildUrl(text)
 
   sseController = createSSE({
     url,
+    timeout: props.timeout,
     onMessage: (data) => {
+      if (aiTimestamp.value === null) {
+        aiTimestamp.value = Date.now()
+      }
+      if (props.chunkSeparator && currentAiContent.value) {
+        currentAiContent.value += props.chunkSeparator
+      }
       currentAiContent.value += data
       scrollToBottom()
     },
@@ -80,6 +125,7 @@ const clearChat = () => {
   sseController = null
   messages.value = []
   currentAiContent.value = ''
+  aiTimestamp.value = null
   input.value = ''
   error.value = ''
 }
@@ -105,14 +151,56 @@ onUnmounted(() => {
         :key="index"
         :class="['message-row', msg.role]"
       >
-        <div class="bubble">{{ msg.content }}</div>
+        <div v-if="msg.role === 'ai'" class="ai-profile">
+          <AiAvatar class="avatar" />
+          <span class="ai-name">{{ title }}</span>
+        </div>
+        <div class="bubble-wrap">
+          <div class="bubble">{{ msg.content }}</div>
+          <div class="message-actions">
+            <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
+            <button
+              class="copy-btn"
+              @click="copyText(msg.content, `msg-${index}`)"
+            >
+              <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              {{ copiedId === `msg-${index}` ? '已复制' : '复制' }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div v-if="currentAiContent" class="message-row ai">
-        <div class="bubble">{{ currentAiContent }}</div>
+        <div class="ai-profile">
+          <AiAvatar class="avatar" />
+          <span class="ai-name">{{ title }}</span>
+        </div>
+        <div class="bubble-wrap">
+          <div class="bubble">{{ currentAiContent }}</div>
+          <div class="message-actions">
+            <span class="msg-time">{{ formatTime(aiTimestamp || Date.now()) }}</span>
+            <button
+              class="copy-btn"
+              @click="copyText(currentAiContent, 'ai-stream')"
+            >
+              <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              {{ copiedId === 'ai-stream' ? '已复制' : '复制' }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div v-if="loading && !currentAiContent" class="message-row ai">
+        <div class="ai-profile">
+          <AiAvatar class="avatar" />
+          <span class="ai-name">{{ title }}</span>
+        </div>
         <div class="bubble loading-bubble">
           <span class="dot" />
           <span class="dot" />
@@ -233,11 +321,39 @@ onUnmounted(() => {
 }
 
 .message-row.ai {
-  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ai-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.ai-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: min(78%, 760px);
+}
+
+.message-row.user .bubble-wrap {
+  align-items: flex-end;
+}
+
+.message-row.ai .bubble-wrap {
+  align-items: flex-start;
 }
 
 .bubble {
-  max-width: min(78%, 760px);
   padding: 14px 18px;
   border-radius: var(--radius-md);
   font-size: 15px;
@@ -261,6 +377,52 @@ onUnmounted(() => {
   border-bottom-left-radius: 4px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.message-row:hover .message-actions {
+  opacity: 1;
+}
+
+.msg-time {
+  font-size: 12px;
+  color: var(--tech-text-muted);
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: var(--tech-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.copy-btn:hover {
+  color: var(--tech-accent);
+  background: var(--tech-accent-soft);
+  border-color: var(--tech-border-hover);
+}
+
+.icon-copy {
+  width: 13px;
+  height: 13px;
 }
 
 .loading-bubble {
@@ -289,6 +451,12 @@ onUnmounted(() => {
 
 .dot:nth-child(2) {
   animation-delay: -0.16s;
+}
+
+@media (hover: none) {
+  .message-actions {
+    opacity: 1;
+  }
 }
 
 .error-tip {
@@ -389,8 +557,11 @@ onUnmounted(() => {
     gap: 14px;
   }
 
-  .bubble {
+  .bubble-wrap {
     max-width: 86%;
+  }
+
+  .bubble {
     padding: 12px 14px;
     font-size: 14px;
   }
