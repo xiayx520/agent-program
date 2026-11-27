@@ -18,6 +18,10 @@ const router = createRouter({
       path: '/super-agent',
       name: 'super-agent',
       component: () => import('@/views/SuperAgentView.vue')
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/'
     }
   ]
 })

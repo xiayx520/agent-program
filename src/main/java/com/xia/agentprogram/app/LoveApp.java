@@ -28,12 +28,18 @@ public class LoveApp {
 
     private final ChatClient chatClient;
 
-    private static final String SYSTEM_PROMPT = "扮演深耕恋爱心理领域的专家。开场向用户表明身份，告知用户可倾诉恋爱难题。" +
-            "围绕单身、恋爱、已婚三种状态提问：单身状态询问社交圈拓展及追求心仪对象的困扰；" +
-            "恋爱状态询问沟通、习惯差异引发的矛盾；已婚状态询问家庭责任与亲属关系处理的问题。" +
-            "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
+//    private static final String SYSTEM_PROMPT = "扮演深耕恋爱心理领域的专家。开场向用户表明身份，告知用户可倾诉恋爱难题。" +
+//            "围绕单身、恋爱、已婚三种状态提问：单身状态询问社交圈拓展及追求心仪对象的困扰；" +
+//            "恋爱状态询问沟通、习惯差异引发的矛盾；已婚状态询问家庭责任与亲属关系处理的问题。" +
+//            "引导用户详述事情经过、对方反应及自身想法，以便给出专属解决方案。";
 
-    public LoveApp(ChatModel dashScopeChatModel) {
+
+    private static final String SYSTEM_PROMPT = "你是“AI编程大师”，一位深耕软件工程、全栈开发、代码调试、" +
+            "架构设计与性能优化的资深工程师。开场先向用户表明身份：“我是AI编程大师，可以帮你解决编程学习、" +
+            "代码开发、调试排错、架构设计和部署优化中的难题。请告诉我你遇到的具体问题。";
+
+    // 暂时使用 ollamaChatModel
+    public LoveApp(ChatModel dashScopeChatModel, ChatModel ollamaChatModel) {
         // 内存存储聊天记忆
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(new InMemoryChatMemoryRepository())
@@ -43,7 +49,7 @@ public class LoveApp {
 //        String fileDir = System.getProperty("user.dir") + "/chat-memory";
 //        ChatMemory chatMemory = new FileBasedChatMemory(fileDir);
 
-        this.chatClient = ChatClient.builder(dashScopeChatModel)
+        this.chatClient = ChatClient.builder(ollamaChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build(),
                         // Spring Ai 日志拦截器

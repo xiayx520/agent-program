@@ -109,12 +109,20 @@ const sendMessage = () => {
     onError: (err) => {
       loading.value = false
       finishAiMessage()
-      error.value = err.message || '请求失败，请稍后重试'
+      error.value = err.message || '服务繁忙，请稍后重试'
       scrollToBottom()
     },
     onComplete: () => {
       loading.value = false
+      const hadContent = currentAiContent.value.trim().length > 0
       finishAiMessage()
+      // 若连接正常结束但没有任何有效内容返回，则给出友好提示
+      if (!hadContent) {
+        const lastMsg = messages.value[messages.value.length - 1]
+        if (!lastMsg || lastMsg.role !== 'ai') {
+          error.value = '未收到有效回复，请稍后重试'
+        }
+      }
       scrollToBottom()
     }
   })
@@ -313,7 +321,6 @@ onUnmounted(() => {
 .message-row {
   display: flex;
   width: 100%;
-  animation: fadeIn 0.35s ease-out both;
 }
 
 .message-row.user {

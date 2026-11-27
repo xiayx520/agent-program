@@ -1,5 +1,17 @@
 import { API_BASE_URL } from './config'
 
+export type SSEErrorType = 'timeout' | 'network' | 'unknown'
+
+export class SSEError extends Error {
+  constructor(
+    public type: SSEErrorType,
+    message: string
+  ) {
+    super(message)
+    this.name = 'SSEError'
+  }
+}
+
 export interface SSEOptions {
   /** SSE 请求地址（相对或绝对） */
   url: string
@@ -45,7 +57,7 @@ export function createSSE(options: SSEOptions): SSEController {
     clearTimer()
     timer = window.setTimeout(() => {
       close()
-      onError?.(new Error('连接超时，请稍后重试'))
+      onError?.(new SSEError('timeout', '响应时间过长，请稍后再试'))
     }, timeout)
   }
 
@@ -63,7 +75,7 @@ export function createSSE(options: SSEOptions): SSEController {
     if (es.readyState === EventSource.CLOSED || hasReceivedData) {
       onComplete?.()
     } else {
-      onError?.(new Error('SSE 连接发生错误'))
+      onError?.(new SSEError('network', '连接失败，请检查网络或稍后重试'))
     }
     es.close()
   }
