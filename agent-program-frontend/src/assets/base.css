@@ -1,52 +1,50 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* Tech theme color palette */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  color-scheme: dark;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --tech-bg: #050b14;
+  --tech-bg-soft: #0a1425;
+  --tech-bg-mute: #0f1e36;
+  --tech-panel: rgba(13, 25, 44, 0.72);
+  --tech-panel-solid: #0d192c;
+  --tech-border: rgba(138, 174, 255, 0.12);
+  --tech-border-hover: rgba(0, 240, 255, 0.35);
+  --tech-primary: #2a6fff;
+  --tech-primary-deep: #0051ff;
+  --tech-accent: #00f0ff;
+  --tech-accent-soft: rgba(0, 240, 255, 0.12);
+  --tech-violet: #8b5cf6;
+  --tech-text: #e8f1ff;
+  --tech-text-muted: #8a9bb8;
+  --tech-heading: #ffffff;
+  --tech-danger: #ff4d6d;
+  --tech-danger-soft: rgba(255, 77, 109, 0.12);
+  --tech-success: #00e5a8;
 
-  --vt-c-indigo: #2c3e50;
+  --tech-shadow: rgba(0, 0, 0, 0.35);
+  --tech-glow: 0 0 20px rgba(0, 240, 255, 0.18);
+  --tech-glow-strong: 0 0 30px rgba(42, 111, 255, 0.35);
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
-
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-}
-
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
+  /* Legacy semantic variables kept for compatibility */
+  --color-background: var(--tech-bg);
+  --color-background-soft: var(--tech-bg-soft);
+  --color-background-mute: var(--tech-bg-mute);
+  --color-border: var(--tech-border);
+  --color-border-hover: var(--tech-border-hover);
+  --color-heading: var(--tech-heading);
+  --color-text: var(--tech-text);
 
   --section-gap: 160px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
+    /* Keep the same tech-dark vibe even when OS requests light mode */
+    color-scheme: dark;
   }
 }
 
@@ -58,10 +56,17 @@
   font-weight: normal;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   min-height: 100vh;
   color: var(--color-text);
-  background: var(--color-background);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(42, 111, 255, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0, 240, 255, 0.08), transparent),
+    var(--color-background);
   transition:
     color 0.5s,
     background-color 0.5s;
@@ -83,4 +88,72 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.45);
+}
+
+/* Global tech animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 240, 255, 0.28);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
 }

@@ -27,6 +27,7 @@ export function createSSE(options: SSEOptions): SSEController {
   const es = new EventSource(fullUrl)
 
   let timer: number | null = null
+  let hasReceivedData = false
 
   const clearTimer = () => {
     if (timer !== null) {
@@ -49,13 +50,17 @@ export function createSSE(options: SSEOptions): SSEController {
   }
 
   es.onmessage = (event) => {
+    if (event.data) {
+      hasReceivedData = true
+    }
     onMessage?.(event.data)
   }
 
   es.onerror = () => {
     clearTimer()
-    // readyState === CLOSED 表示服务端已正常关闭连接
-    if (es.readyState === EventSource.CLOSED) {
+    // 服务端正常流式结束后往往会触发 error 并重连（readyState === CONNECTING）。
+    // 若已经收到过数据，则视为正常结束；从未收到数据才当作真正的连接异常。
+    if (es.readyState === EventSource.CLOSED || hasReceivedData) {
       onComplete?.()
     } else {
       onError?.(new Error('SSE 连接发生错误'))
