@@ -40,6 +40,7 @@ export function createSSE(options: SSEOptions): SSEController {
 
   let timer: number | null = null
   let hasReceivedData = false
+  let finished = false
 
   const clearTimer = () => {
     if (timer !== null) {
@@ -53,11 +54,17 @@ export function createSSE(options: SSEOptions): SSEController {
     es.close()
   }
 
+  const finish = (callback: (() => void) | undefined) => {
+    if (finished) return
+    finished = true
+    close()
+    callback?.()
+  }
+
   es.onopen = () => {
     clearTimer()
     timer = window.setTimeout(() => {
-      close()
-      onError?.(new SSEError('timeout', '响应时间过长，请稍后再试'))
+      finish(() => onError?.(new SSEError('timeout', '响应时间过长，请稍后再试')))
     }, timeout)
   }
 
@@ -72,12 +79,12 @@ export function createSSE(options: SSEOptions): SSEController {
     clearTimer()
     // 服务端正常流式结束后往往会触发 error 并重连（readyState === CONNECTING）。
     // 若已经收到过数据，则视为正常结束；从未收到数据才当作真正的连接异常。
+    // 必须显式 close()，否则 EventSource 会继续自动重连。
     if (es.readyState === EventSource.CLOSED || hasReceivedData) {
-      onComplete?.()
+      finish(onComplete)
     } else {
-      onError?.(new SSEError('network', '连接失败，请检查网络或稍后重试'))
+      finish(() => onError?.(new SSEError('network', '连接失败，请检查网络或稍后重试')))
     }
-    es.close()
   }
 
   return { close }

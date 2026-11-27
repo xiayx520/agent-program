@@ -46,7 +46,7 @@ const autoResize = () => {
 }
 
 const handleEnter = (e: KeyboardEvent) => {
-  if (e.shiftKey) return
+  if (e.shiftKey || e.isComposing || !canSend.value) return
   e.preventDefault()
   sendMessage()
 }
@@ -120,11 +120,16 @@ const finishAiMessage = () => {
 }
 
 const sendMessage = () => {
+  if (loading.value) return
+
   const text = input.value.trim()
   if (!text) {
     error.value = '请输入消息内容'
     return
   }
+
+  sseController?.close()
+  sseController = null
 
   error.value = ''
   messages.value.push({ role: 'user', content: text, timestamp: Date.now() })
@@ -442,7 +447,7 @@ onUnmounted(() => {
 }
 
 .markdown-body {
-  white-space: normal;
+  white-space: pre-wrap;
 }
 
 .markdown-body :first-child {
