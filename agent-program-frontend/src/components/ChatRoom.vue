@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { createSSE } from '@/api/sse'
+import { renderMarkdown } from '@/utils/markdown'
 import AiAvatar from '@/components/AiAvatar.vue'
+
+const checkIconSvg =
+  '<svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>'
 
 interface ChatMessage {
   role: 'user' | 'ai'
@@ -28,10 +32,24 @@ const currentAiContent = ref('')
 const aiTimestamp = ref<number | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
 const copiedId = ref<string | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 let sseController: { close: () => void } | null = null
 
 const canSend = computed(() => input.value.trim().length > 0 && !loading.value)
+
+const autoResize = () => {
+  const el = textareaRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+}
+
+const handleEnter = (e: KeyboardEvent) => {
+  if (e.shiftKey) return
+  e.preventDefault()
+  sendMessage()
+}
 
 const scrollToBottom = async () => {
   await nextTick()
@@ -64,6 +82,31 @@ const copyText = async (text: string, id: string) => {
   }, 1500)
 }
 
+const handleBubbleClick = (e: MouseEvent) => {
+  const btn = (e.target as HTMLElement).closest('.code-copy-btn')
+  if (!btn) return
+  const wrapper = btn.closest('.code-block-wrapper')
+  const codeEl = wrapper?.querySelector('code')
+  if (!codeEl) return
+  const text = codeEl.textContent || ''
+  const id = `code-${Date.now()}`
+  copyText(text, id)
+  const icon = btn.querySelector('svg')
+  const originalTitle = btn.getAttribute('title')
+  if (icon) {
+    icon.innerHTML = '<polyline points="20 6 9 17 4 12" />'
+  }
+  btn.setAttribute('title', '已复制')
+  btn.classList.add('copied')
+  setTimeout(() => {
+    if (icon) {
+      icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />'
+    }
+    btn.setAttribute('title', originalTitle || '复制')
+    btn.classList.remove('copied')
+  }, 1500)
+}
+
 const finishAiMessage = () => {
   if (currentAiContent.value) {
     messages.value.push({
@@ -86,6 +129,7 @@ const sendMessage = () => {
   error.value = ''
   messages.value.push({ role: 'user', content: text, timestamp: Date.now() })
   input.value = ''
+  nextTick(autoResize)
   loading.value = true
   currentAiContent.value = ''
   aiTimestamp.value = null
@@ -136,6 +180,7 @@ const clearChat = () => {
   aiTimestamp.value = null
   input.value = ''
   error.value = ''
+  nextTick(autoResize)
 }
 
 onUnmounted(() => {
@@ -164,7 +209,11 @@ onUnmounted(() => {
           <span class="ai-name">{{ title }}</span>
         </div>
         <div class="bubble-wrap">
-          <div class="bubble">{{ msg.content }}</div>
+          <div
+            class="bubble markdown-body"
+            v-html="msg.role === 'ai' ? renderMarkdown(msg.content) : msg.content"
+            @click="msg.role === 'ai' ? handleBubbleClick($event) : undefined"
+          ></div>
           <div class="message-actions">
             <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
             <button
@@ -187,7 +236,11 @@ onUnmounted(() => {
           <span class="ai-name">{{ title }}</span>
         </div>
         <div class="bubble-wrap">
-          <div class="bubble">{{ currentAiContent }}</div>
+          <div
+            class="bubble markdown-body"
+            v-html="renderMarkdown(currentAiContent)"
+            @click="handleBubbleClick"
+          ></div>
           <div class="message-actions">
             <span class="msg-time">{{ formatTime(aiTimestamp || Date.now()) }}</span>
             <button
@@ -220,12 +273,14 @@ onUnmounted(() => {
     <div v-if="error" class="error-tip">{{ error }}</div>
 
     <footer class="input-area">
-      <input
+      <textarea
+        ref="textareaRef"
         v-model="input"
-        type="text"
-        placeholder="请输入消息，按 Enter 发送"
+        placeholder="请输入消息，按 Enter 发送，Shift+Enter 换行"
         :disabled="loading"
-        @keyup.enter="sendMessage"
+        rows="1"
+        @input="autoResize"
+        @keydown.enter="handleEnter"
       />
       <button :disabled="!canSend" @click="sendMessage">
         {{ loading ? '发送中' : '发送' }}
@@ -366,7 +421,6 @@ onUnmounted(() => {
   font-size: 15px;
   line-height: 1.7;
   word-break: break-word;
-  white-space: pre-wrap;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
 }
 
@@ -375,6 +429,7 @@ onUnmounted(() => {
   color: #ffffff;
   border-bottom-right-radius: 4px;
   box-shadow: 0 6px 26px rgba(42, 111, 255, 0.35);
+  white-space: pre-wrap;
 }
 
 .message-row.ai .bubble {
@@ -384,6 +439,253 @@ onUnmounted(() => {
   border-bottom-left-radius: 4px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.markdown-body {
+  white-space: normal;
+}
+
+.markdown-body :first-child {
+  margin-top: 0;
+}
+
+.markdown-body :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin: 18px 0 10px;
+  font-weight: 700;
+  color: var(--tech-heading);
+  line-height: 1.35;
+}
+
+.markdown-body h1 {
+  font-size: 20px;
+  border-bottom: 1px solid var(--tech-border);
+  padding-bottom: 8px;
+}
+
+.markdown-body h2 {
+  font-size: 18px;
+}
+
+.markdown-body h3 {
+  font-size: 16px;
+}
+
+.markdown-body p {
+  margin: 10px 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 10px 0;
+  padding-left: 22px;
+}
+
+.markdown-body li {
+  margin: 4px 0;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 14px;
+  border: 1px solid var(--tech-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.markdown-body th,
+.markdown-body td {
+  padding: 10px 12px;
+  border: 1px solid var(--tech-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-body th {
+  background: var(--tech-bg-mute);
+  color: var(--tech-heading);
+  font-weight: 600;
+}
+
+.markdown-body tr:nth-child(even) {
+  background: rgba(138, 174, 255, 0.04);
+}
+
+.markdown-body tr:hover {
+  background: rgba(0, 240, 255, 0.06);
+}
+
+.markdown-body blockquote {
+  margin: 14px 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--tech-accent);
+  background: var(--tech-accent-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--tech-text-muted);
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--tech-border);
+  margin: 16px 0;
+}
+
+.markdown-body a {
+  color: var(--tech-accent);
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body strong {
+  color: var(--tech-heading);
+  font-weight: 700;
+}
+
+.markdown-body em {
+  color: var(--tech-text);
+  font-style: italic;
+}
+
+.markdown-body del {
+  color: var(--tech-text-muted);
+  text-decoration: line-through;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.markdown-body input[type='checkbox'] {
+  margin-right: 8px;
+  accent-color: var(--tech-accent);
+}
+
+.inline-code {
+  display: inline;
+  padding: 2px 6px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  border-radius: 6px;
+  color: var(--tech-accent);
+  font-family:
+    'Fira Code',
+    'SF Mono',
+    Monaco,
+    Consolas,
+    monospace;
+  font-size: 0.9em;
+  word-break: break-word;
+}
+
+.code-block-wrapper {
+  position: relative;
+  margin: 14px 0;
+  border: 1px solid var(--tech-border);
+  border-radius: var(--radius-md);
+  background: rgba(5, 11, 20, 0.75);
+  overflow: hidden;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.code-block-wrapper code {
+  font-family:
+    'Fira Code',
+    'SF Mono',
+    Monaco,
+    Consolas,
+    monospace;
+  font-size: 13px;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  color: inherit;
+}
+
+.markdown-body pre,
+.markdown-body pre code,
+.markdown-body pre code * {
+  white-space: pre !important;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--tech-border);
+}
+
+.code-lang {
+  font-family:
+    'Fira Code',
+    'SF Mono',
+    Monaco,
+    Consolas,
+    monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tech-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--tech-text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(138, 174, 255, 0.2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.code-copy-btn:hover {
+  color: var(--tech-accent);
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--tech-border-hover);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.18);
+}
+
+.code-copy-btn.copied {
+  color: var(--tech-success);
+  background: rgba(0, 229, 168, 0.12);
+  border-color: rgba(0, 229, 168, 0.35);
+}
+
+.code-copy-btn .icon-copy {
+  width: 12px;
+  height: 12px;
 }
 
 .message-actions {
@@ -408,11 +710,11 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   font-size: 12px;
   color: var(--tech-text-muted);
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(13, 25, 44, 0.6);
+  border: 1px solid var(--tech-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
@@ -478,6 +780,7 @@ onUnmounted(() => {
 
 .input-area {
   display: flex;
+  align-items: flex-end;
   gap: 12px;
   padding: 16px 24px;
   border-top: 1px solid var(--tech-border);
@@ -486,32 +789,37 @@ onUnmounted(() => {
   -webkit-backdrop-filter: blur(14px);
 }
 
-.input-area input {
+.input-area textarea {
   flex: 1;
+  min-height: 50px;
+  max-height: 160px;
   padding: 14px 18px;
   font-size: 15px;
+  line-height: 1.6;
   color: var(--tech-text);
   background: rgba(5, 11, 20, 0.55);
   border: 1px solid var(--tech-border);
   border-radius: var(--radius-md);
   outline: none;
+  resize: none;
+  overflow-y: auto;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
 }
 
-.input-area input::placeholder {
+.input-area textarea::placeholder {
   color: var(--tech-text-muted);
 }
 
-.input-area input:focus {
+.input-area textarea:focus {
   border-color: var(--tech-accent);
   box-shadow:
     0 0 0 3px rgba(0, 240, 255, 0.1),
     0 0 20px rgba(0, 240, 255, 0.12);
 }
 
-.input-area input:disabled {
+.input-area textarea:disabled {
   background: rgba(255, 255, 255, 0.04);
   cursor: not-allowed;
   color: var(--tech-text-muted);

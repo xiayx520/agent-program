@@ -10,7 +10,7 @@ const buildUrl = (message: string) => {
   <ChatRoom
     title="AI 超级智能体"
     :build-url="buildUrl"
-    :chunk-separator="'\n'"
+    :chunk-separator="'  \n'"
     :timeout="300000"
   />
 </template>
