@@ -31,12 +31,15 @@ export interface SSEController {
 
 /**
  * 建立 SSE 连接并实时消费流式数据
- * 使用原生 EventSource，连接关闭时通过 readyState 区分正常结束与异常
+ *
+ * 使用 fetch + ReadableStream 手动解析 SSE：后端 Spring SseEmitter 写出的数据行是 `data:xxx`，
+ * 原生 EventSource 会按规范删除 `data:` 后的一个空格，导致模型按 token 返回的前导空格
+ * （代码块中的空格、缩进等）丢失，因此这里保留 `data:` 后的原始字符。
  */
 export function createSSE(options: SSEOptions): SSEController {
   const { url, onMessage, onError, onComplete, timeout = 180000 } = options
   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`
-  const es = new EventSource(fullUrl)
+  const abortController = new AbortController()
 
   let timer: number | null = null
   let hasReceivedData = false
@@ -51,7 +54,7 @@ export function createSSE(options: SSEOptions): SSEController {
 
   const close = () => {
     clearTimer()
-    es.close()
+    abortController.abort()
   }
 
   const finish = (callback: (() => void) | undefined) => {
@@ -61,31 +64,72 @@ export function createSSE(options: SSEOptions): SSEController {
     callback?.()
   }
 
-  es.onopen = () => {
+  const startTimer = () => {
     clearTimer()
     timer = window.setTimeout(() => {
       finish(() => onError?.(new SSEError('timeout', '响应时间过长，请稍后再试')))
     }, timeout)
   }
 
-  es.onmessage = (event) => {
-    if (event.data) {
-      hasReceivedData = true
+  const consume = async () => {
+    try {
+      const response = await fetch(fullUrl, {
+        signal: abortController.signal,
+        headers: { Accept: 'text/event-stream' }
+      })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      if (!response.body) throw new Error('Empty response body')
+      startTimer()
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder('utf-8')
+      let buffer = ''
+      let dataLines: string[] = []
+
+      const dispatch = () => {
+        if (dataLines.length === 0) return
+        const data = dataLines.join('\n')
+        dataLines = []
+        if (!data) return
+        hasReceivedData = true
+        onMessage?.(data)
+      }
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        let index: number
+        while ((index = buffer.indexOf('\n')) !== -1) {
+          const line = buffer.slice(0, index).replace(/\r$/, '')
+          buffer = buffer.slice(index + 1)
+          if (line === '') {
+            dispatch()
+          } else if (line.startsWith('data:')) {
+            dataLines.push(line.slice(5))
+          }
+        }
+      }
+
+      buffer += decoder.decode()
+      if (buffer) {
+        const line = buffer.replace(/\r$/, '')
+        if (line.startsWith('data:')) dataLines.push(line.slice(5))
+      }
+      dispatch()
+      finish(onComplete)
+    } catch (err) {
+      if (finished || abortController.signal.aborted) return
+      finish(() => onError?.(
+        hasReceivedData
+          ? new SSEError('unknown', err instanceof Error ? err.message : '连接异常')
+          : new SSEError('network', '连接失败，请检查网络或稍后重试')
+      ))
     }
-    onMessage?.(event.data)
   }
 
-  es.onerror = () => {
-    clearTimer()
-    // 服务端正常流式结束后往往会触发 error 并重连（readyState === CONNECTING）。
-    // 若已经收到过数据，则视为正常结束；从未收到数据才当作真正的连接异常。
-    // 必须显式 close()，否则 EventSource 会继续自动重连。
-    if (es.readyState === EventSource.CLOSED || hasReceivedData) {
-      finish(onComplete)
-    } else {
-      finish(() => onError?.(new SSEError('network', '连接失败，请检查网络或稍后重试')))
-    }
-  }
+  startTimer()
+  void consume()
 
   return { close }
 }

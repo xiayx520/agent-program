@@ -450,55 +450,55 @@ onUnmounted(() => {
   white-space: pre-wrap;
 }
 
-.markdown-body :first-child {
+.markdown-body :deep(:first-child) {
   margin-top: 0;
 }
 
-.markdown-body :last-child {
+.markdown-body :deep(:last-child) {
   margin-bottom: 0;
 }
 
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4,
-.markdown-body h5,
-.markdown-body h6 {
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4),
+.markdown-body :deep(h5),
+.markdown-body :deep(h6) {
   margin: 18px 0 10px;
   font-weight: 700;
   color: var(--tech-heading);
   line-height: 1.35;
 }
 
-.markdown-body h1 {
+.markdown-body :deep(h1) {
   font-size: 20px;
   border-bottom: 1px solid var(--tech-border);
   padding-bottom: 8px;
 }
 
-.markdown-body h2 {
+.markdown-body :deep(h2) {
   font-size: 18px;
 }
 
-.markdown-body h3 {
+.markdown-body :deep(h3) {
   font-size: 16px;
 }
 
-.markdown-body p {
+.markdown-body :deep(p) {
   margin: 10px 0;
 }
 
-.markdown-body ul,
-.markdown-body ol {
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
   margin: 10px 0;
   padding-left: 22px;
 }
 
-.markdown-body li {
+.markdown-body :deep(li) {
   margin: 4px 0;
 }
 
-.markdown-body table {
+.markdown-body :deep(table) {
   width: 100%;
   border-collapse: collapse;
   margin: 14px 0;
@@ -508,29 +508,29 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.markdown-body th,
-.markdown-body td {
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
   padding: 10px 12px;
   border: 1px solid var(--tech-border);
   text-align: left;
   vertical-align: top;
 }
 
-.markdown-body th {
+.markdown-body :deep(th) {
   background: var(--tech-bg-mute);
   color: var(--tech-heading);
   font-weight: 600;
 }
 
-.markdown-body tr:nth-child(even) {
+.markdown-body :deep(tr:nth-child(even)) {
   background: rgba(138, 174, 255, 0.04);
 }
 
-.markdown-body tr:hover {
+.markdown-body :deep(tr:hover) {
   background: rgba(0, 240, 255, 0.06);
 }
 
-.markdown-body blockquote {
+.markdown-body :deep(blockquote) {
   margin: 14px 0;
   padding: 10px 16px;
   border-left: 3px solid var(--tech-accent);
@@ -539,47 +539,47 @@ onUnmounted(() => {
   color: var(--tech-text-muted);
 }
 
-.markdown-body hr {
+.markdown-body :deep(hr) {
   border: none;
   border-top: 1px solid var(--tech-border);
   margin: 16px 0;
 }
 
-.markdown-body a {
+.markdown-body :deep(a) {
   color: var(--tech-accent);
   text-decoration: none;
 }
 
-.markdown-body a:hover {
+.markdown-body :deep(a:hover) {
   text-decoration: underline;
 }
 
-.markdown-body strong {
+.markdown-body :deep(strong) {
   color: var(--tech-heading);
   font-weight: 700;
 }
 
-.markdown-body em {
+.markdown-body :deep(em) {
   color: var(--tech-text);
   font-style: italic;
 }
 
-.markdown-body del {
+.markdown-body :deep(del) {
   color: var(--tech-text-muted);
   text-decoration: line-through;
 }
 
-.markdown-body img {
+.markdown-body :deep(img) {
   max-width: 100%;
   border-radius: var(--radius-sm);
 }
 
-.markdown-body input[type='checkbox'] {
+.markdown-body :deep(input[type='checkbox']) {
   margin-right: 8px;
   accent-color: var(--tech-accent);
 }
 
-.inline-code {
+.markdown-body :deep(.inline-code) {
   display: inline;
   padding: 2px 6px;
   background: rgba(0, 240, 255, 0.1);
@@ -596,7 +596,7 @@ onUnmounted(() => {
   word-break: break-word;
 }
 
-.code-block-wrapper {
+.markdown-body :deep(.code-block-wrapper) {
   position: relative;
   margin: 14px 0;
   border: 1px solid var(--tech-border);
@@ -605,14 +605,14 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.code-block-wrapper pre {
+.markdown-body :deep(.code-block-wrapper pre) {
   margin: 0;
   padding: 14px 16px;
   overflow-x: auto;
   line-height: 1.6;
 }
 
-.code-block-wrapper code {
+.markdown-body :deep(.code-block-wrapper code) {
   font-family:
     'Fira Code',
     'SF Mono',
@@ -626,23 +626,23 @@ onUnmounted(() => {
   color: inherit;
 }
 
-.markdown-body pre,
-.markdown-body pre code,
-.markdown-body pre code * {
+.markdown-body :deep(pre),
+.markdown-body :deep(pre code),
+.markdown-body :deep(pre code *) {
   white-space: pre !important;
 }
 
-.code-header {
+.markdown-body :deep(.code-header) {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   background: rgba(0, 0, 0, 0.25);
   border-bottom: 1px solid var(--tech-border);
 }
 
-.code-lang {
+.markdown-body :deep(.code-lang) {
   font-family:
     'Fira Code',
     'SF Mono',
@@ -653,44 +653,55 @@ onUnmounted(() => {
   font-weight: 600;
   color: var(--tech-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
-.code-copy-btn {
+.markdown-body :deep(.code-copy-btn) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   color: var(--tech-text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 174, 255, 0.2);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   cursor: pointer;
   transition:
     color 0.2s,
     background 0.2s,
     border-color 0.2s,
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    transform 0.15s;
 }
 
-.code-copy-btn:hover {
+.markdown-body :deep(.code-copy-btn:hover) {
   color: var(--tech-accent);
-  background: rgba(0, 240, 255, 0.12);
-  border-color: var(--tech-border-hover);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.18);
+  background: rgba(0, 240, 255, 0.1);
+  border-color: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.16);
 }
 
-.code-copy-btn.copied {
+.markdown-body :deep(.code-copy-btn:active) {
+  transform: scale(0.92);
+}
+
+.markdown-body :deep(.code-copy-btn:focus-visible) {
+  outline: 2px solid rgba(0, 240, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.markdown-body :deep(.code-copy-btn.copied) {
   color: var(--tech-success);
   background: rgba(0, 229, 168, 0.12);
-  border-color: rgba(0, 229, 168, 0.35);
+  border-color: rgba(0, 229, 168, 0.4);
 }
 
-.code-copy-btn .icon-copy {
-  width: 12px;
-  height: 12px;
+.markdown-body :deep(.code-copy-btn .icon-copy) {
+  width: 14px;
+  height: 14px;
+  flex: none;
 }
 
 .message-actions {

@@ -14,6 +14,7 @@ import java from 'highlight.js/lib/languages/java'
 import javascript from 'highlight.js/lib/languages/javascript'
 import json from 'highlight.js/lib/languages/json'
 import nginx from 'highlight.js/lib/languages/nginx'
+import plaintext from 'highlight.js/lib/languages/plaintext'
 import powershell from 'highlight.js/lib/languages/powershell'
 import properties from 'highlight.js/lib/languages/properties'
 import python from 'highlight.js/lib/languages/python'
@@ -37,6 +38,7 @@ const languages: Record<string, unknown> = {
   javascript,
   json,
   nginx,
+  plaintext,
   powershell,
   properties,
   python,
@@ -58,6 +60,18 @@ const copyIconSvg =
 const copyBtnHtml =
   `<button class="code-copy-btn" type="button" title="复制" aria-label="复制代码">${copyIconSvg}</button>`
 
+const escapeHtml = (text: string): string =>
+  text.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }
+    return entities[char] ?? char
+  })
+
 const slugify = (text: string): string => {
   return text
     .replace(/<[^>]+>/g, '')
@@ -77,8 +91,14 @@ marked.use({
       return `<h${depth} id="${id}" class="md-heading">${text}</h${depth}>`
     },
     code({ text, lang }) {
-      const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext'
-      const highlighted = hljs.highlight(text, { language }).value
+      const langName = lang?.trim().split(/\s+/)[0]?.toLowerCase() || ''
+      const language = langName && hljs.getLanguage(langName) ? langName : 'plaintext'
+      let highlighted: string
+      try {
+        highlighted = hljs.highlight(text, { language, ignoreIllegals: true }).value
+      } catch {
+        highlighted = escapeHtml(text)
+      }
       const langLabel = language === 'plaintext' ? 'TEXT' : language.toUpperCase()
       return `<div class="code-block-wrapper"><div class="code-header"><span class="code-lang">${langLabel}</span>${copyBtnHtml}</div><pre><code class="hljs language-${language}">${highlighted}</code></pre></div>`
     },
